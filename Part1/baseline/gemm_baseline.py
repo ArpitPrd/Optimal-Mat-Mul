@@ -1,12 +1,19 @@
 # Usage: python3 gemm_baseline.py N num_procs
 import sys
-import time
 import numpy as np
 from multiprocessing import Pool
 
 def worker_multiply(args):
     A_block, B = args
     return A_block.dot(B)
+
+def run_gemm(P, blocks, B):
+    """Encapsulates the core multiplication logic."""
+    with Pool(P) as p:
+        C_blocks = p.map(worker_multiply, [(blk, B) for blk in blocks])
+    # vstack is part of the operation
+    C = np.vstack(C_blocks) 
+    return C
 
 if __name__ == '__main__':
     if len(sys.argv) < 3:
@@ -23,10 +30,7 @@ if __name__ == '__main__':
     # simple blocked approach: split A into P row-blocks
     blocks = [A[i::P, :] for i in range(P)]
 
-    t0 = time.time()
-    with Pool(P) as p:
-        C_blocks = p.map(worker_multiply, [(blk, B) for blk in blocks])
-    C = np.vstack(C_blocks)
-    t1 = time.time()
+    # --- Run the multiplication one time ---
+    _ = run_gemm(P, blocks, B)
 
-    print(f'N={N} P={P} time={t1-t0:.6f} seconds')
+    # All timing and reporting has been removed.
