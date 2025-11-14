@@ -12,7 +12,7 @@ CXX=g++
 # -march=native: Use CPU-specific instructions (like AVX) [cite: 11]
 # -fopenmp: Enable OpenMP for parallel regions [cite: 5]
 CXX_FLAGS="-O3 -march=native -fopenmp -std=c++17"
-SRC_FILE="optimized/cpp/gemm_opt.cpp" # [cite: 42]
+SRC_FILE="optimized/cpp/gemm_opt1.cpp" # [cite: 42]
 BIN_FILE="optimized/gemm_opt"     # [cite: 43]
 # ---------------------
 
@@ -66,14 +66,21 @@ echo "------------------------------------------"
 echo "Running optimized (./$BIN_FILE)..."
 optimized_total=0.0
 for i in $(seq 1 $NUM_RUNS); do
-    echo -n "  Run $i/$NUM_RUNS... "
+    echo "  Run $i/$NUM_RUNS... " # Removed -n to put output on next line
     
-    # Use the same time-capturing method for the C++ binary
-    run_time=$( { /usr/bin/time -p ./$BIN_FILE $N $P; } 2>&1 | grep 'real' | awk '{print $2}' )
+    # This runs the C++ program. Its stdout prints to your terminal.
+    # The ( ... ) 2> time.tmp captures only the stderr
+    # (which contains the 'time' output) into a file.
+    ( /usr/bin/time -p ./$BIN_FILE $N $P ) 2> time.tmp
+    
+    # Now, parse the time from that temporary file
+    run_time=$(grep 'real' time.tmp | awk '{print $2}')
     
     optimized_total=$(echo "$optimized_total + $run_time" | bc)
-    echo "$run_time s"
+    echo "  (Time: $run_time s)" # Show time separately
 done
+
+rm time.tmp # Clean up the temporary file
 
 # Calculate average optimized time
 optimized_avg=$(echo "scale=6; $optimized_total / $NUM_RUNS" | bc)
