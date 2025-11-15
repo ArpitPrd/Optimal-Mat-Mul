@@ -1,6 +1,15 @@
-// gemm_opt_fixed.cpp
-// Fixed version: AVX2/AVX-512 intrinsics usage corrected and function-level targets added.
-// CORRECTED: OpenMP pragma moved to the outermost loop to prevent fork/join overhead.
+// gemm_opt_conditional.cpp
+//
+// Optimized GEMM with AVX-512, OpenMP, and *conditional* NUMA-awareness.
+// This code will compile on any system, but will only enable NUMA
+// features if the build script defines the `HAS_NUMA` macro.
+//
+// Build with:
+// g++ -O3 -march=native -fopenmp -std=c++17 gemm_opt_conditional.cpp -o gemm_opt
+//
+// Build *with* NUMA:
+// g++ -O3 -march=native -fopenmp -std=c++17 -DHAS_NUMA gemm_opt_conditional.cpp -o gemm_opt -lnuma
+//
 
 #include <bits/stdc++.h>
 #include <immintrin.h>
@@ -10,7 +19,40 @@
 #include <sys/sysinfo.h>
 #include <sched.h>
 
+// --- Conditionally include NUMA headers ---
+// This is the core fix: these lines are only processed if the
+// compiler is given the -DHAS_NUMA flag.
+#ifdef HAS_NUMA
+#include <numa.h>
+#include <numaif.h>
+#endif
+// --- End conditional include ---
+
 using namespace std;
+
+// ---------- NUMA Check ----------
+static bool g_numa_available = false; // Will remain false if HAS_NUMA is not defined
+
+/**
+ * @brief Checks for NUMA support and prints the number of nodes.
+ * This function is safe to call even without NUMA, as the NUMA-specific
+ * code is guarded by the #ifdef.
+ */
+static void check_numa_support() {
+#ifdef HAS_NUMA
+    // This code block only exists if -DHAS_NUMA was passed
+    if (numa_available() == 0) {
+        g_numa_available = true;
+        cout << "NUMA support detected: " << numa_num_configured_nodes() << " nodes." << endl;
+        cout << "Info: Using parallel first-touch policy for NUMA-aware allocation." << endl;
+    } else {
+        cout << "NUMA support not available (libnuma error)." << endl;
+    }
+#else
+    // This code block exists if -DHAS_NUMA was *not* passed
+    cout << "NUMA support not compiled. (Header 'numa.h' not found during build)." << endl;
+#endif
+}
 
 // ---------- Feature detection ----------
 static inline bool has_avx2() {
@@ -49,16 +91,23 @@ static void* aligned_malloc(size_t bytes, size_t align) {
 }
 static void aligned_free(void* p) { free(p); }
 
-// transpose B -> B_T (block transpose)
+/**
+ * @brief Transposes matrix B into B_T in parallel.
+ * This is crucial for NUMA first-touch on B_T.
+ */
 static void transpose(const double* B, double* B_T, int N) {
-    const int TB = 64;
+    const int TB = 64; // Tiling block size
+    
+    #pragma omp parallel for schedule(static)
     for (int i = 0; i < N; i += TB) {
         int i_max = min(N, i + TB);
         for (int j = 0; j < N; j += TB) {
             int j_max = min(N, j + TB);
-            for (int ii = i; ii < i_max; ++ii)
-                for (int jj = j; jj < j_max; ++jj)
-                    B_T[jj*N + ii] = B[ii*N + jj];
+            for (int ii = i; ii < i_max; ++ii) {
+                for (int jj = j; jj < j_max; ++jj) {
+                    B_T[jj*N + ii] = B[ii*N + jj]; // First touch on B_T[jj*N + ii]
+                }
+            }
         }
     }
 }
@@ -66,6 +115,7 @@ static void transpose(const double* B, double* B_T, int N) {
 // Generic blocked matmul (fallback)
 static void gemm_blocked_generic(const double* A, const double* B_T, double* C, int N,
                                  int MC, int KC, int NC) {
+    #pragma omp parallel for schedule(static)
     for (int i0 = 0; i0 < N; i0 += MC) {
         int ib = min(MC, N - i0);
         for (int k0 = 0; k0 < N; k0 += KC) {
@@ -77,7 +127,7 @@ static void gemm_blocked_generic(const double* A, const double* B_T, double* C, 
                         double a = A[i*N + k];
                         double* crow = &C[i*N + j0];
                         for (int j = 0; j < jb; ++j) {
-                            crow[j] += a * B_T[(j0 + j)*N + k]; // B_T[ j*N + k ]
+                            crow[j] += a * B_T[(j0 + j)*N + k];
                         }
                     }
                 }
@@ -92,7 +142,7 @@ __attribute__((target("avx2,fma")))
 #endif
 static void gemm_blocked_avx2_kernel(const double* A, const double* B_T, double* C, int N,
                               int i_start, int i_end, int k_start, int k_end, int j0, int jb) {
-    const bool use_fma = has_fma(); // runtime check ok, but kernel compiled with fma if attribute used
+    const bool use_fma = has_fma(); 
     const int V = 4; // 4 doubles in 256-bit
     for (int i = i_start; i < i_end; ++i) {
         for (int k = k_start; k < k_end; ++k) {
@@ -100,9 +150,7 @@ static void gemm_blocked_avx2_kernel(const double* A, const double* B_T, double*
             __m256d va = _mm256_set1_pd(a);
             int j = j0;
             for (; j + V - 1 < j0 + jb; j += V) {
-                // use unaligned load/store to be safe
                 __m256d vc = _mm256_loadu_pd(&C[i*N + j]);
-                // B_T layout: B_T[ j*N + k ] == B[k*N + j]
                 __m256d vb = _mm256_loadu_pd(&B_T[j*N + k]);
                 if (use_fma) {
                     vc = _mm256_fmadd_pd(va, vb, vc);
@@ -121,7 +169,6 @@ static void gemm_blocked_avx2_kernel(const double* A, const double* B_T, double*
 static void gemm_blocked_avx2(const double* A, const double* B_T, double* C, int N,
                               int MC, int KC, int NC) {
     
-    // *** FIX: Moved pragma to the outermost loop ***
     #pragma omp parallel for schedule(static)
     for (int i0 = 0; i0 < N; i0 += MC) {
         int ib = min(MC, N - i0);
@@ -129,10 +176,7 @@ static void gemm_blocked_avx2(const double* A, const double* B_T, double* C, int
             int kb = min(KC, N - k0);
             for (int j0 = 0; j0 < N; j0 += NC) {
                 int jb = min(NC, N - j0);
-                
-                // *** FIX: Removed pragma from here ***
                 for (int i = i0; i < i0 + ib; ++i) {
-                    // call kernel per-row-range to keep inner kernel simple
                     gemm_blocked_avx2_kernel(A, B_T, C, N, i, i+1, k0, k0+kb, j0, jb);
                 }
             }
@@ -168,7 +212,6 @@ static void gemm_blocked_avx512_kernel(const double* A, const double* B_T, doubl
 static void gemm_blocked_avx512(const double* A, const double* B_T, double* C, int N,
                                 int MC, int KC, int NC) {
     
-    // *** FIX: Moved pragma to the outermost loop ***
     #pragma omp parallel for schedule(static)
     for (int i0 = 0; i0 < N; i0 += MC) {
         int ib = min(MC, N - i0);
@@ -176,8 +219,6 @@ static void gemm_blocked_avx512(const double* A, const double* B_T, double* C, i
             int kb = min(KC, N - k0);
             for (int j0 = 0; j0 < N; j0 += NC) {
                 int jb = min(NC, N - j0);
-                
-                // *** FIX: Removed pragma from here ***
                 for (int i = i0; i < i0 + ib; ++i) {
                     gemm_blocked_avx512_kernel(A,B_T,C,N,i,i+1,k0,k0+kb,j0,jb);
                 }
@@ -190,16 +231,20 @@ static void gemm_blocked_avx512(const double* A, const double* B_T, double* C, i
 static void gemm_driver(const double* A, const double* B, double* C, int N, int threads) {
     double* B_T = (double*)aligned_malloc(sizeof(double)*(size_t)N*(size_t)N, 64);
     if (!B_T) { cerr << "Allocation failed\n"; exit(1); }
+    
+    omp_set_num_threads(threads);
+    omp_set_dynamic(0);
+    omp_set_schedule(omp_sched_static, 0);
+
+    // Call the now-parallel transpose.
+    // This provides first-touch benefits even on non-NUMA systems
+    // by improving cache locality.
     transpose(B, B_T, N);
 
     int MC = 128;
     int KC = 256;
     int NC = 256;
     MC = min(MC, N); KC = min(KC, N); NC = min(NC, N);
-
-    omp_set_num_threads(threads);
-    omp_set_dynamic(0);
-    omp_set_schedule(omp_sched_static, 0);
 
     const char* force = getenv("KERNEL");
     bool used = false;
@@ -231,6 +276,13 @@ int main(int argc, char** argv) {
     if (N <= 0 || T <= 0) { cerr << "Invalid args\n"; return 1; }
 
     cout << "Threads requested: " << T << "\n";
+    omp_set_num_threads(T);
+    setenv("OMP_PROC_BIND", "TRUE", 1);
+    setenv("OMP_PLACES", "cores", 1);
+
+    // This call is now safe, whether compiled with NUMA or not.
+    check_numa_support();
+
     cout << "Detected: AVX2=" << (has_avx2() ? "yes" : "no")
          << " AVX-512=" << (has_avx512f() ? "yes" : "no")
          << " FMA=" << (has_fma() ? "yes" : "no") << "\n";
@@ -242,12 +294,30 @@ int main(int argc, char** argv) {
     if (!A || !B || !C) { cerr << "OOM\n"; return 1; }
 
     std::mt19937_64 rng(1234567);
-    std::normal_distribution<double> dist(0.0, 1.0);
-    for (size_t i = 0; i < (size_t)N * N; ++i) { A[i] = dist(rng); B[i] = dist(rng); C[i] = 0.0; }
+    vector<std::mt19937_64> thread_rngs;
+    thread_rngs.reserve(T);
+    for (int i = 0; i < T; ++i) {
+        thread_rngs.emplace_back(rng());
+    }
+    
+    cout << "Initializing matrices in parallel (first-touch policy)..." << endl;
+    
+    // This parallel initialization is *always* good, even without NUMA,
+    // as it establishes cache affinity.
+    #pragma omp parallel
+    {
+        int tid = omp_get_thread_num();
+        std::normal_distribution<double> local_dist(0.0, 1.0);
+        std::mt19937_64& local_rng = thread_rngs[tid];
 
-    omp_set_num_threads(T);
-    setenv("OMP_PROC_BIND", "TRUE", 1);
-    setenv("OMP_PLACES", "cores", 1);
+        #pragma omp for schedule(static)
+        for (size_t i = 0; i < (size_t)N * N; ++i) {
+            A[i] = local_dist(local_rng);
+            B[i] = local_dist(local_rng);
+            C[i] = 0.0; // Crucial first-touch on C
+        }
+    }
+    cout << "Initialization complete." << endl;
 
     double t0 = omp_get_wtime();
     gemm_driver(A,B,C,N,T);
