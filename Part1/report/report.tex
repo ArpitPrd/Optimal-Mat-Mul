@@ -1,0 +1,198 @@
+\documentclass[11pt, a4paper]{article}
+
+% --- 1. PREAMBLE ---
+% --- Geometry & Font ---
+\usepackage[a4paper, top=2.5cm, bottom=2.5cm, left=2.5cm, right=2.5cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage{lmodern}
+\renewcommand{\familydefault}{\sfdefault}
+
+% --- Standard Packages ---
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{caption}
+\usepackage{verbatim}
+\usepackage{textcomp}
+
+% --- Section Styling ---
+\usepackage{sectsty}
+\sectionfont{\sffamily\Large}
+\subsectionfont{\sffamily\large}
+\subsubsectionfont{\sffamily\normalsize}
+
+% --- Hyperlinks ---
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,
+    urlcolor=cyan,
+    pdftitle={GEMM Optimization Report},
+    pdfauthor={Your Team},
+}
+
+% --- 2. TITLE SECTION ---
+\title{
+    \sffamily\bfseries\huge
+    Lab: Accelerating Code: From Python Baseline to Architecture-Aware Optimization \\
+    \vspace{0.5\baselineskip}
+    \large Dense Matrix-Matrix Multiplication (GEMM) Challenge
+}
+
+\author{
+    \sffamily
+    Team Name: [Your Team Name Here] \\
+    Entry Numbers: [mcsXXXXX, mcsYYYYY]
+}
+
+\date{\today}
+
+% --- 3. DOCUMENT BODY ---
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\noindent
+This report details the iterative process of optimizing a Dense Matrix-Matrix Multiplication (GEMM) algorithm, starting from a Python baseline. We describe the implementation of several architecture-aware techniques, including OpenMP for multicore parallelism, cache-friendly blocking, and SIMD vectorization using AVX intrinsics. We present a comprehensive performance analysis, measuring GFLOPS, speedup, and scalability against thread count and problem size. Our final optimized C++ implementation achieves a significant speedup of [X.XX]x over the baseline, demonstrating the performance impact of architecture-level design.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+% --- Section 1 ---
+\section{Problem Description}
+
+The objective of this assignment is to accelerate a Dense Matrix-Matrix Multiplication (GEMM) operation, $C = A \times B$. The baseline implementation is provided in Python, using \texttt{numpy} and the \texttt{multiprocessing} library. Our goal is to reimplement this in C++ and apply a series of architecture-aware optimizations to maximize performance, measured in GFLOPS and speedup.
+
+This report documents our optimizations for input matrix sizes
+\[
+N \in \{512, 1024, 1536, 2048\}.
+\]
+
+% --- Section 2 ---
+\section{Baseline Implementation}
+
+The baseline consists of the \texttt{gemm\_baseline.py} script. It uses the Python \texttt{multiprocessing} library to distribute blocks of matrix A to worker processes, where each worker computes its portion using \texttt{np.dot()}. Although \texttt{numpy} is optimized, the Python overhead is significant.
+
+Our environment:
+
+\begin{itemize}
+    \item \textbf{CPU Model:} [Your CPU Model]
+    \item \textbf{Cores/Threads:} [e.g., 16 cores / 32 threads]
+    \item \textbf{Caches:} [e.g., L1/L2/L3 = 32K/1024K/36608K]
+    \item \textbf{OS:} [e.g., Ubuntu 20.04.5 LTS]
+    \item \textbf{Compiler:} g++ 11.3.0
+\end{itemize}
+
+% --- Section 3 ---
+\section{Optimizations Implemented}
+
+We implemented the following optimizations.
+
+\subsection{Multithreading with OpenMP}
+
+A major bug was fixed—OpenMP was incorrectly placed inside inner loops. The final correct placement:
+
+\begin{verbatim}
+// Correct OpenMP structure
+#pragma omp parallel for schedule(static)
+for (int i0 = 0; i0 < N; i0 += MC) {
+    for (int k0 = 0; k0 < N; k0 += KC) {
+        for (int j0 = 0; j0 < N; j0 += NC) {
+            // ...
+        }
+    }
+}
+\end{verbatim}
+
+\subsection{Cache-Friendly Blocking}
+
+To reduce cache misses, we divided matrices into blocks:
+
+- A: \(MC \times KC\)
+- B: \(KC \times NC\)
+- C: \(MC \times NC\)
+
+We chose: \(MC = 128\), \(KC = 256\), \(NC = 256\).
+
+\begin{figure}[htbp]
+  \centering
+  \framebox{\parbox{0.8\textwidth}{
+    \centering
+    \vspace{4cm}
+    \textbf{Image Placeholder: Cache Blocking Diagram} \\
+    \small\textit{Block-level diagram showing i0, k0, j0 tiling.}
+    \vspace{4cm}
+  }}
+  \caption{Our cache-blocking strategy.}
+  \label{fig:blocking}
+\end{figure}
+
+\subsection{SIMD Vectorization}
+
+We implemented an AVX2/AVX-512 microkernel to compute the innermost block fully in vector registers.
+
+\subsection{Other Optimizations}
+
+\begin{itemize}
+    \item Pre-transposition of matrix B for sequential memory access.
+    \item 64-byte aligned memory for SIMD.
+    \item Compiler flags: \texttt{-O3 -march=native -fopenmp}.
+\end{itemize}
+
+% --- Section 4 ---
+\section{Experimental Methodology}
+
+We used automated scripts:
+
+\begin{enumerate}
+    \item Warmup run
+    \item 10 measured runs per configuration
+    \item Logged to \texttt{gemm\_results.csv}
+\end{enumerate}
+
+% --- Section 5 ---
+\section{Performance Results}
+
+\begin{table}[htbp]
+\centering
+\caption{Key Performance Metrics (Avg. of 10 Runs)}
+\label{tab:results}
+\begin{tabular}{lrrrr}
+\toprule
+\textbf{Metric} & \textbf{512} & \textbf{1024} & \textbf{1536} & \textbf{2048} \\
+\midrule
+Baseline Time (s) & [ ] & [ ] & [ ] & [ ] \\
+Optimized Time (s, T=16) & [ ] & [ ] & [ ] & [ ] \\
+Optimized GFLOPS & [ ] & [ ] & [ ] & [ ] \\
+Max Speedup & [ ] & [ ] & [ ] & [ ] \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[htbp]
+  \centering
+  \framebox{\parbox{0.8\textwidth}{
+    \centering
+    \vspace{5cm}
+    \textbf{Image Placeholder: GFLOPS vs Threads Plot} \\
+    \vspace{5cm}
+  }}
+  \caption{Performance (GFLOPS) vs. Thread Count.}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \framebox{\parbox{0.8\textwidth}{
+    \centering
+    \vspace{5cm}
+    \textbf{Image Placeholder: Speedup vs Threads Plot} \\
+    \vspace{5cm}
+  }}
+  \caption{Speedup vs. Thread Count.}
+\end{figure}
+
+\end{document}
