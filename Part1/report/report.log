@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.27 (MiKTeX 25.4) (preloaded format=pdflatex 2025.8.13)  15 NOV 2025 13:28
+This is pdfTeX, Version 3.141592653-2.6-1.40.27 (MiKTeX 25.4) (preloaded format=pdflatex 2025.8.13)  15 NOV 2025 14:57
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -345,8 +345,8 @@ Package uniquecounter Info: New unique counter `rerunfilecheck' on input line 28
 )
 \Hy@SectionHShift=\skip54
 )
-Package hyperref Info: Option `colorlinks' set `true' on input line 35.
-LaTeX Font Info:    Trying to load font information for T1+lmss on input line 54.
+Package hyperref Info: Option `colorlinks' set `true' on input line 34.
+LaTeX Font Info:    Trying to load font information for T1+lmss on input line 53.
  (/home/arpit/.miktex/texmfs/install/tex/latex/lm/t1lmss.fd
 File: t1lmss.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 ) (/home/arpit/.miktex/texmfs/install/tex/latex/l3backend/l3backend-pdftex.def
@@ -355,24 +355,24 @@ File: l3backend-pdftex.def 2025-06-09 L3 backend support: PDF output (pdfTeX)
 ) (report.aux)
 \openout1 = `report.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 54.
-LaTeX Font Info:    ... okay on input line 54.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 54.
-LaTeX Font Info:    ... okay on input line 54.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 54.
-LaTeX Font Info:    ... okay on input line 54.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 54.
-LaTeX Font Info:    ... okay on input line 54.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 54.
-LaTeX Font Info:    ... okay on input line 54.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 54.
-LaTeX Font Info:    ... okay on input line 54.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 54.
-LaTeX Font Info:    ... okay on input line 54.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 54.
-LaTeX Font Info:    ... okay on input line 54.
-LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 54.
-LaTeX Font Info:    ... okay on input line 54.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 53.
+LaTeX Font Info:    ... okay on input line 53.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 53.
+LaTeX Font Info:    ... okay on input line 53.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 53.
+LaTeX Font Info:    ... okay on input line 53.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 53.
+LaTeX Font Info:    ... okay on input line 53.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 53.
+LaTeX Font Info:    ... okay on input line 53.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 53.
+LaTeX Font Info:    ... okay on input line 53.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 53.
+LaTeX Font Info:    ... okay on input line 53.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 53.
+LaTeX Font Info:    ... okay on input line 53.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 53.
+LaTeX Font Info:    ... okay on input line 53.
 
 *geometry* driver: auto-detecting
 *geometry* detected driver: pdftex
@@ -437,105 +437,107 @@ File: color.cfg 2016/01/02 v1.6 sample color configuration
 )
 Package color Info: Driver file: pdftex.def on input line 149.
  (/home/arpit/.miktex/texmfs/install/tex/latex/graphics/mathcolor.ltx))
-Package hyperref Info: Link coloring ON on input line 54.
+Package hyperref Info: Link coloring ON on input line 53.
  (report.out) (report.out)
 \@outlinefile=\write3
 \openout3 = `report.out'.
 
-LaTeX Font Info:    Trying to load font information for OT1+lmr on input line 57.
+LaTeX Font Info:    Trying to load font information for OT1+lmr on input line 56.
  (/home/arpit/.miktex/texmfs/install/tex/latex/lm/ot1lmr.fd
 File: ot1lmr.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 )
-LaTeX Font Info:    Trying to load font information for OML+lmm on input line 57.
+LaTeX Font Info:    Trying to load font information for OML+lmm on input line 56.
  (/home/arpit/.miktex/texmfs/install/tex/latex/lm/omllmm.fd
 File: omllmm.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 )
-LaTeX Font Info:    Trying to load font information for OMS+lmsy on input line 57.
+LaTeX Font Info:    Trying to load font information for OMS+lmsy on input line 56.
  (/home/arpit/.miktex/texmfs/install/tex/latex/lm/omslmsy.fd
 File: omslmsy.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 )
-LaTeX Font Info:    Trying to load font information for OMX+lmex on input line 57.
+LaTeX Font Info:    Trying to load font information for OMX+lmex on input line 56.
  (/home/arpit/.miktex/texmfs/install/tex/latex/lm/omxlmex.fd
 File: omxlmex.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 )
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <12> on input line 57.
+(Font)              <12> on input line 56.
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <8> on input line 57.
+(Font)              <8> on input line 56.
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <6> on input line 57.
-LaTeX Font Info:    Trying to load font information for T1+lmtt on input line 64.
+(Font)              <6> on input line 56.
+LaTeX Font Info:    Trying to load font information for T1+lmtt on input line 59.
  (/home/arpit/.miktex/texmfs/install/tex/latex/lm/t1lmtt.fd
 File: t1lmtt.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 )
-LaTeX Font Info:    Trying to load font information for TS1+lmss on input line 69.
+LaTeX Font Info:    Trying to load font information for TS1+lmss on input line 64.
  (/home/arpit/.miktex/texmfs/install/tex/latex/lm/ts1lmss.fd
 File: ts1lmss.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 )
+LaTeX Font Info:    Font shape `T1/lmss/m/it' in size <10.95> not available
+(Font)              Font shape `T1/lmss/m/sl' tried instead on input line 90.
+LaTeX Font Info:    External font `lmex10' loaded for size
+(Font)              <10.95> on input line 90.
+
 
 [1
 
 {/home/arpit/.miktex/texmfs/data/fonts/map/pdftex/pdftex.map}{/home/arpit/.miktex/texmfs/install/fonts/enc/dvips/lm/lm-ec.enc}{/home/arpit/.miktex/texmfs/install/fonts/enc/dvips/lm/lm-ts1.enc}]
-Overfull \hbox (0.79558pt too wide) in paragraph at lines 103--104
-\T1/lmss/m/n/10.95 All ma-tri-ces are al-lo-cated with 64-byte align-ment us-ing \T1/lmtt/m/n/10.95 posix_memalign \T1/lmss/m/n/10.95 to max-i-mize AVX load/store
- []
 
-LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <10.95> on input line 129.
-</home/arpit/Desktop/iitd/sem_7/COL718/projects/Optimal-Mat-Mul/Part1/plots/plot_time_vs_size.png, id=97, 722.7pt x 433.62pt>
-File: /home/arpit/Desktop/iitd/sem_7/COL718/projects/Optimal-Mat-Mul/Part1/plots/plot_time_vs_size.png Graphic file (type png)
-<use /home/arpit/Desktop/iitd/sem_7/COL718/projects/Optimal-Mat-Mul/Part1/plots/plot_time_vs_size.png>
-Package pdftex.def Info: /home/arpit/Desktop/iitd/sem_7/COL718/projects/Optimal-Mat-Mul/Part1/plots/plot_time_vs_size.png  used on input line 144.
-(pdftex.def)             Requested size: 364.19667pt x 218.51653pt.
-
-
-[2]
-</home/arpit/Desktop/iitd/sem_7/COL718/projects/Optimal-Mat-Mul/Part1/plots/plot_gflops_vs_size.png, id=108, 722.7pt x 433.62pt>
+[2{/home/arpit/.miktex/texmfs/install/fonts/enc/dvips/lm/lm-rm.enc}{/home/arpit/.miktex/texmfs/install/fonts/enc/dvips/lm/lm-mathit.enc}{/home/arpit/.miktex/texmfs/install/fonts/enc/dvips/lm/lm-mathsy.enc}]
+</home/arpit/Desktop/iitd/sem_7/COL718/projects/Optimal-Mat-Mul/Part1/plots/plot_gflops_vs_size.png, id=82, 722.7pt x 433.62pt>
 File: /home/arpit/Desktop/iitd/sem_7/COL718/projects/Optimal-Mat-Mul/Part1/plots/plot_gflops_vs_size.png Graphic file (type png)
 <use /home/arpit/Desktop/iitd/sem_7/COL718/projects/Optimal-Mat-Mul/Part1/plots/plot_gflops_vs_size.png>
-Package pdftex.def Info: /home/arpit/Desktop/iitd/sem_7/COL718/projects/Optimal-Mat-Mul/Part1/plots/plot_gflops_vs_size.png  used on input line 151.
+Package pdftex.def Info: /home/arpit/Desktop/iitd/sem_7/COL718/projects/Optimal-Mat-Mul/Part1/plots/plot_gflops_vs_size.png  used on input line 163.
 (pdftex.def)             Requested size: 364.19667pt x 218.51653pt.
-</home/arpit/Desktop/iitd/sem_7/COL718/projects/Optimal-Mat-Mul/Part1/plots/plot_speedup_vs_size.png, id=109, 722.7pt x 433.62pt>
+</home/arpit/Desktop/iitd/sem_7/COL718/projects/Optimal-Mat-Mul/Part1/plots/plot_speedup_vs_size.png, id=84, 722.7pt x 433.62pt>
 File: /home/arpit/Desktop/iitd/sem_7/COL718/projects/Optimal-Mat-Mul/Part1/plots/plot_speedup_vs_size.png Graphic file (type png)
 <use /home/arpit/Desktop/iitd/sem_7/COL718/projects/Optimal-Mat-Mul/Part1/plots/plot_speedup_vs_size.png>
-Package pdftex.def Info: /home/arpit/Desktop/iitd/sem_7/COL718/projects/Optimal-Mat-Mul/Part1/plots/plot_speedup_vs_size.png  used on input line 158.
+Package pdftex.def Info: /home/arpit/Desktop/iitd/sem_7/COL718/projects/Optimal-Mat-Mul/Part1/plots/plot_speedup_vs_size.png  used on input line 170.
 (pdftex.def)             Requested size: 364.19667pt x 218.51653pt.
-</home/arpit/Desktop/iitd/sem_7/COL718/projects/Optimal-Mat-Mul/Part1/plots/plot_gflops_vs_threads.png, id=110, 722.7pt x 433.62pt>
+</home/arpit/Desktop/iitd/sem_7/COL718/projects/Optimal-Mat-Mul/Part1/plots/plot_gflops_vs_threads.png, id=85, 722.7pt x 433.62pt>
 File: /home/arpit/Desktop/iitd/sem_7/COL718/projects/Optimal-Mat-Mul/Part1/plots/plot_gflops_vs_threads.png Graphic file (type png)
 <use /home/arpit/Desktop/iitd/sem_7/COL718/projects/Optimal-Mat-Mul/Part1/plots/plot_gflops_vs_threads.png>
-Package pdftex.def Info: /home/arpit/Desktop/iitd/sem_7/COL718/projects/Optimal-Mat-Mul/Part1/plots/plot_gflops_vs_threads.png  used on input line 165.
+Package pdftex.def Info: /home/arpit/Desktop/iitd/sem_7/COL718/projects/Optimal-Mat-Mul/Part1/plots/plot_gflops_vs_threads.png  used on input line 176.
 (pdftex.def)             Requested size: 364.19667pt x 218.51653pt.
-</home/arpit/Desktop/iitd/sem_7/COL718/projects/Optimal-Mat-Mul/Part1/plots/plot_speedup_vs_threads.png, id=111, 722.7pt x 433.62pt>
+
+
+LaTeX Warning: `!h' float specifier changed to `!ht'.
+
+</home/arpit/Desktop/iitd/sem_7/COL718/projects/Optimal-Mat-Mul/Part1/plots/plot_speedup_vs_threads.png, id=86, 722.7pt x 433.62pt>
 File: /home/arpit/Desktop/iitd/sem_7/COL718/projects/Optimal-Mat-Mul/Part1/plots/plot_speedup_vs_threads.png Graphic file (type png)
 <use /home/arpit/Desktop/iitd/sem_7/COL718/projects/Optimal-Mat-Mul/Part1/plots/plot_speedup_vs_threads.png>
-Package pdftex.def Info: /home/arpit/Desktop/iitd/sem_7/COL718/projects/Optimal-Mat-Mul/Part1/plots/plot_speedup_vs_threads.png  used on input line 172.
+Package pdftex.def Info: /home/arpit/Desktop/iitd/sem_7/COL718/projects/Optimal-Mat-Mul/Part1/plots/plot_speedup_vs_threads.png  used on input line 182.
 (pdftex.def)             Requested size: 364.19667pt x 218.51653pt.
 
+LaTeX Warning: `!h' float specifier changed to `!ht'.
 
-[3 </home/arpit/Desktop/iitd/sem_7/COL718/projects/Optimal-Mat-Mul/Part1/plots/plot_time_vs_size.png> </home/arpit/Desktop/iitd/sem_7/COL718/projects/Optimal-Mat-Mul/Part1/plots/plot_gflops_vs_size.png>]
 
-[4 </home/arpit/Desktop/iitd/sem_7/COL718/projects/Optimal-Mat-Mul/Part1/plots/plot_speedup_vs_size.png> </home/arpit/Desktop/iitd/sem_7/COL718/projects/Optimal-Mat-Mul/Part1/plots/plot_gflops_vs_threads.png>]
 
-[5 </home/arpit/Desktop/iitd/sem_7/COL718/projects/Optimal-Mat-Mul/Part1/plots/plot_speedup_vs_threads.png>] (report.aux)
+[3]
+
+[4 </home/arpit/Desktop/iitd/sem_7/COL718/projects/Optimal-Mat-Mul/Part1/plots/plot_gflops_vs_size.png> </home/arpit/Desktop/iitd/sem_7/COL718/projects/Optimal-Mat-Mul/Part1/plots/plot_speedup_vs_size.png>]
+
+[5 </home/arpit/Desktop/iitd/sem_7/COL718/projects/Optimal-Mat-Mul/Part1/plots/plot_gflops_vs_threads.png> </home/arpit/Desktop/iitd/sem_7/COL718/projects/Optimal-Mat-Mul/Part1/plots/plot_speedup_vs_threads.png>]
+
+[6] (report.aux)
  ***********
 LaTeX2e <2025-06-01> patch level 1
 L3 programming layer <2025-07-20>
  ***********
 Package rerunfilecheck Info: File `report.out' has not changed.
-(rerunfilecheck)             Checksum: 9CA8B001E81562148A0EC0BD2F5EE23B;3484.
+(rerunfilecheck)             Checksum: 347DD3B0CC7E47C169BEDD95F4CFD58D;2460.
  ) 
 Here is how much of TeX's memory you used:
- 12782 strings out of 468135
- 208957 string characters out of 5435616
- 626994 words of memory out of 5000000
- 41191 multiletter control sequences out of 15000+600000
- 668180 words of font info for 66 fonts, out of 8000000 for 9000
+ 12777 strings out of 468135
+ 208196 string characters out of 5435616
+ 628994 words of memory out of 5000000
+ 41181 multiletter control sequences out of 15000+600000
+ 673756 words of font info for 68 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 75i,8n,79p,425b,489s stack positions out of 10000i,1000n,20000p,200000b,200000s
-</home/arpit/.miktex/texmfs/install/fonts/type1/public/lm/lmss10.pfb></home/arpit/.miktex/texmfs/install/fonts/type1/public/lm/lmss12.pfb></home/arpit/.miktex/texmfs/install/fonts/type1/public/lm/lmssbx10.pfb></home/arpit/.miktex/texmfs/install/fonts/type1/public/lm/lmtt10.pfb>
-Output written on report.pdf (5 pages, 378966 bytes).
+ 75i,8n,79p,812b,598s stack positions out of 10000i,1000n,20000p,200000b,200000s
+</home/arpit/.miktex/texmfs/install/fonts/type1/public/lm/lmmi10.pfb></home/arpit/.miktex/texmfs/install/fonts/type1/public/lm/lmr10.pfb></home/arpit/.miktex/texmfs/install/fonts/type1/public/lm/lmss10.pfb></home/arpit/.miktex/texmfs/install/fonts/type1/public/lm/lmss12.pfb></home/arpit/.miktex/texmfs/install/fonts/type1/public/lm/lmss8.pfb></home/arpit/.miktex/texmfs/install/fonts/type1/public/lm/lmssbx10.pfb></home/arpit/.miktex/texmfs/install/fonts/type1/public/lm/lmsso10.pfb></home/arpit/.miktex/texmfs/install/fonts/type1/public/lm/lmsy10.pfb></home/arpit/.miktex/texmfs/install/fonts/type1/public/lm/lmtt10.pfb>
+Output written on report.pdf (6 pages, 390457 bytes).
 PDF statistics:
- 167 PDF objects out of 1000 (max. 8388607)
+ 178 PDF objects out of 1000 (max. 8388607)
  37 named destinations out of 1000 (max. 500000)
- 194 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 141 words of extra memory for PDF output out of 10000 (max. 10000000)
 

@@ -1,1 +1,4 @@
-N,T,time_opt,gflops_opt,time_base,speedup,cycles,instr,ipc,l1_load,l1_miss,l1_miss_rate,llc_load,llc_miss,llc_miss_rate,branches,branch_miss,branch_miss_rate
+N,T,Time_Opt,GFLOPS_Opt,Time_Base,Speedup
+512,1,.032813,8.181093,.133333,4.0634
+512,2,.018982,14.187197,.156666,8.2533
+512,4,.014655,18.502920,.210000,14.3295
