@@ -1,106 +1,95 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# --- Configuration ---
-N=${1:-1024} # Matrix size (N x N), default 1024
-P=${2:-4}    # Number of processes/threads, default 4
-NUM_RUNS=10  # Number of times to run each implementation
+# This script runs a benchmark for a SINGLE (N, T) pair for
+# BOTH the optimized C++ and the baseline Python versions.
+#
+# It performs (for each version):
+# 1. A warmup run.
+# 2. A specified number of sample runs (e.g., 10).
+# 3. It averages the results and calculates the speedup.
+# 4. It appends all metrics to the CSV file.
 
-# C++ Compilation settings
-CXX=g++
-# -O3: Strong optimization [cite: 11]
-# -march=native: Use CPU-specific instructions (like AVX) [cite: 11]
-# -fopenmp: Enable OpenMP for parallel regions [cite: 5]
-CXX_FLAGS="-O3 -march=native -fopenmp -std=c++17"
-SRC_FILE="optimized/cpp/gemm_opt1.cpp" # [cite: 42]
-BIN_FILE="optimized/gemm_opt"     # [cite: 43]
+# --- Configuration ---
+# N (Matrix Size) is $1
+# T (Threads) is $2
+# OUT_FILE (CSV) is $3
+N=${1}
+T=${2}
+OUT_FILE=${3}
+
+BIN_FILE_OPT="optimized/gemm_opt"
+BIN_FILE_BASE="baseline/gemm_baseline.py"
+NUM_SAMPLES=10 # Number of samples to run and average
 # ---------------------
 
-echo "Starting benchmark:"
-echo "  N = $N (Matrix size)"
-echo "  P = $P (Processes/Threads)"
-echo "  Runs = $NUM_RUNS (per implementation)"
-echo "------------------------------------------"
-
-# 1. COMPILE C++ OPTIMIZED CODE
-echo "Compiling: $CXX $CXX_FLAGS $SRC_FILE -o $BIN_FILE"
-if ! $CXX $CXX_FLAGS $SRC_FILE -o $BIN_FILE; then
-    echo "Error: C++ compilation failed."
+# --- Input Validation ---
+if [ -z "$N" ] || [ -z "$T" ] || [ -z "$OUT_FILE" ]; then
+    echo "Usage: $0 <N> <T> <output_csv_file>"
+    exit 1
+fi
+if [ ! -x "$BIN_FILE_OPT" ]; then
+    echo "Error: Optimized binary '$BIN_FILE_OPT' not found." >&2
+    echo "Run 'run_all_tests.sh' to compile it first." >&2
+    exit 1
+fi
+if [ ! -f "$BIN_FILE_BASE" ]; then
+    echo "Error: Baseline script '$BIN_FILE_BASE' not found." >&2
     exit 1
 fi
 
-# Check if compilation was successful
-if [ ! -x "$BIN_FILE" ]; then
-    echo "Error: Optimized binary '$BIN_FILE' not found or not executable after compile."
-    exit 1
-fi
-echo "Compilation successful."
-echo "------------------------------------------"
+echo "--- Benchmarking N=$N, T=$T ---"
 
+# === 1. Run Optimized C++ Benchmark ===
+echo "Running Optimized C++ (1 warmup + $NUM_SAMPLES samples)..."
+# Warmup
+$BIN_FILE_OPT $N $T > /dev/null
 
-# 2. Run Baseline (Python)
-echo "Running baseline (python3 baseline/gemm_baseline.py)..."
-baseline_total=0.0
-for i in $(seq 1 $NUM_RUNS); do
-    echo -n "  Run $i/$NUM_RUNS... "
+total_time_opt=0.0
+total_gflops_opt=0.0
+
+for i in $(seq 1 $NUM_SAMPLES); do
+    OUTPUT=$($BIN_FILE_OPT $N $T)
+    DATA_LINE=$(echo "$OUTPUT" | grep "^N=")
+    GFLOPS_LINE=$(echo "$OUTPUT" | grep "^GFLOPS=")
+
+    TIME_VAL=$(echo "$DATA_LINE" | awk -F'[= ]' '{print $6}')
+    GFLOPS_VAL=$(echo "$GFLOPS_LINE" | awk -F'[= ]' '{print $2}')
     
-    # Use /usr/bin/time -p to get POSIX-standard 'real' time output on stderr
+    total_time_opt=$(echo "$total_time_opt + $TIME_VAL" | bc)
+    total_gflops_opt=$(echo "$total_gflops_opt + $GFLOPS_VAL" | bc)
+done
+
+avg_time_opt=$(echo "scale=6; $total_time_opt / $NUM_SAMPLES" | bc)
+avg_gflops_opt=$(echo "scale=6; $total_gflops_opt / $NUM_SAMPLES" | bc)
+echo "Optimized Avg: Time=${avg_time_opt}s, GFLOPS=${avg_gflops_opt}"
+
+# === 2. Run Baseline Python Benchmark ===
+echo "Running Baseline Python (1 warmup + $NUM_SAMPLES samples)..."
+# Warmup
+( /usr/bin/time -p python3 $BIN_FILE_BASE $N $T ) &> /dev/null
+
+total_time_base=0.0
+
+for i in $(seq 1 $NUM_SAMPLES); do
+    # Use /usr/bin/time -p to get 'real' time on stderr
     # { ...; } 2>&1 redirects stderr to stdout
-    # grep 'real' filters for the line with wall-clock time
-    # awk '{print $2}' extracts the second column (the time value)
-    run_time=$( { /usr/bin/time -p python3 baseline/gemm_baseline.py $N $P; } 2>&1 | grep 'real' | awk '{print $2}' )
+    run_time_base=$( { /usr/bin/time -p python3 $BIN_FILE_BASE $N $T; } 2>&1 | grep 'real' | awk '{print $2}' )
     
-    # Add to total using bc for floating point math
-    baseline_total=$(echo "$baseline_total + $run_time" | bc)
-    echo "$run_time s"
+    total_time_base=$(echo "$total_time_base + $run_time_base" | bc)
 done
 
-# Calculate average baseline time
-# Use 'bc -l' or 'scale=' for floating point division
-baseline_avg=$(echo "scale=6; $baseline_total / $NUM_RUNS" | bc)
-echo "Average baseline time: $baseline_avg s"
-echo "------------------------------------------"
+avg_time_base=$(echo "scale=6; $total_time_base / $NUM_SAMPLES" | bc)
+echo "Baseline Avg: Time=${avg_time_base}s"
 
-
-# 3. Run Optimized (C++)
-echo "Running optimized (./$BIN_FILE)..."
-optimized_total=0.0
-for i in $(seq 1 $NUM_RUNS); do
-    echo "  Run $i/$NUM_RUNS... " # Removed -n to put output on next line
-    
-    # This runs the C++ program. Its stdout prints to your terminal.
-    # The ( ... ) 2> time.tmp captures only the stderr
-    # (which contains the 'time' output) into a file.
-    ( /usr/bin/time -p ./$BIN_FILE $N $P ) 2> time.tmp
-    
-    # Now, parse the time from that temporary file
-    run_time=$(grep 'real' time.tmp | awk '{print $2}')
-    
-    optimized_total=$(echo "$optimized_total + $run_time" | bc)
-    echo "  (Time: $run_time s)" # Show time separately
-done
-
-rm time.tmp # Clean up the temporary file
-
-# Calculate average optimized time
-optimized_avg=$(echo "scale=6; $optimized_total / $NUM_RUNS" | bc)
-echo "Average optimized time: $optimized_avg s"
-echo "------------------------------------------"
-
-
-# 4. Report Final Speedup
+# === 3. Calculate Speedup and Log to CSV ===
+speedup=0.0
 # Check for divide-by-zero, just in case
-if (( $(echo "$optimized_avg == 0" | bc -l) )); then
-    echo "Error: Optimized time was zero. Cannot calculate speedup."
-    exit 1
+if (( $(echo "$avg_time_opt > 0" | bc -l) )); then
+    speedup=$(echo "scale=4; $avg_time_base / $avg_time_opt" | bc)
 fi
+echo "Speedup (Base/Opt): ${speedup}x"
 
-speedup=$(echo "scale=4; $baseline_avg / $optimized_avg" | bc)
-
-echo "Benchmark Complete"
-echo
-echo "  Average Baseline Time:  $baseline_avg s"
-echo "  Average Optimized Time: $optimized_avg s"
-echo
-echo "  Speedup (Baseline / Optimized): ${speedup}x"
-echo "------------------------------------------"
+# Append all data as a new row in the CSV
+echo "$N,$T,$avg_time_opt,$avg_gflops_opt,$avg_time_base,$speedup" >> $OUT_FILE
+echo "Result logged to $OUT_FILE"
