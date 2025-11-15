@@ -1,5 +1,6 @@
 // gemm_opt_fixed.cpp
 // Fixed version: AVX2/AVX-512 intrinsics usage corrected and function-level targets added.
+// CORRECTED: OpenMP pragma moved to the outermost loop to prevent fork/join overhead.
 
 #include <bits/stdc++.h>
 #include <immintrin.h>
@@ -119,13 +120,17 @@ static void gemm_blocked_avx2_kernel(const double* A, const double* B_T, double*
 
 static void gemm_blocked_avx2(const double* A, const double* B_T, double* C, int N,
                               int MC, int KC, int NC) {
+    
+    // *** FIX: Moved pragma to the outermost loop ***
+    #pragma omp parallel for schedule(static)
     for (int i0 = 0; i0 < N; i0 += MC) {
         int ib = min(MC, N - i0);
         for (int k0 = 0; k0 < N; k0 += KC) {
             int kb = min(KC, N - k0);
             for (int j0 = 0; j0 < N; j0 += NC) {
                 int jb = min(NC, N - j0);
-                #pragma omp parallel for schedule(static)
+                
+                // *** FIX: Removed pragma from here ***
                 for (int i = i0; i < i0 + ib; ++i) {
                     // call kernel per-row-range to keep inner kernel simple
                     gemm_blocked_avx2_kernel(A, B_T, C, N, i, i+1, k0, k0+kb, j0, jb);
@@ -162,13 +167,17 @@ static void gemm_blocked_avx512_kernel(const double* A, const double* B_T, doubl
 
 static void gemm_blocked_avx512(const double* A, const double* B_T, double* C, int N,
                                 int MC, int KC, int NC) {
+    
+    // *** FIX: Moved pragma to the outermost loop ***
+    #pragma omp parallel for schedule(static)
     for (int i0 = 0; i0 < N; i0 += MC) {
         int ib = min(MC, N - i0);
         for (int k0 = 0; k0 < N; k0 += KC) {
             int kb = min(KC, N - k0);
             for (int j0 = 0; j0 < N; j0 += NC) {
                 int jb = min(NC, N - j0);
-                #pragma omp parallel for schedule(static)
+                
+                // *** FIX: Removed pragma from here ***
                 for (int i = i0; i < i0 + ib; ++i) {
                     gemm_blocked_avx512_kernel(A,B_T,C,N,i,i+1,k0,k0+kb,j0,jb);
                 }
