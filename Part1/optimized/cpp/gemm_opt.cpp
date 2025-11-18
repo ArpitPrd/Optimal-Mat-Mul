@@ -117,27 +117,50 @@ static void gemm_blocked_generic(const double* A, const double* B_T, double* C, 
 #if defined(__GNUC__) || defined(__clang__)
 __attribute__((target("avx2,fma")))
 #endif
-static void gemm_blocked_avx2_kernel(const double* A, const double* B_T, double* C, int N, int i_start, int i_end, int k_start, int k_end, int j0, int jb) {
-    const bool use_fma = has_fma(); 
+static void gemm_blocked_avx2_kernel(const double* A, const double* B, double* C, int N, int i_start, int i_end, int k_start, int k_end, int j0, int jb) {
+    
+    // FMA check should be done ONCE, outside all loops.
+    // Or, use if constexpr (C++17) or templates.
+    // For this example, we'll just assume FMA is available.
+    
     const int V = 4; // 4 doubles in 256-bit
+
+    // Loop over rows of C
     for (int i = i_start; i < i_end; ++i) {
-        for (int k = k_start; k < k_end; ++k) {
-            double a = A[i*N + k];
-            __m256d va = _mm256_set1_pd(a);
-            int j = j0;
-            for (; j + V - 1 < j0 + jb; j += V) {
-                __m256d vc = _mm256_loadu_pd(&C[i*N + j]);
-                __m256d vb = _mm256_loadu_pd(&B_T[j*N + k]);
-                if (use_fma) {
-                    vc = _mm256_fmadd_pd(va, vb, vc);
-                } else {
-                    vc = _mm256_add_pd(vc, _mm256_mul_pd(va, vb));
-                }
-                _mm256_storeu_pd(&C[i*N + j], vc);
+        
+        int j = j0;
+        
+        // Vectorized j-loop (now outside the k-loop)
+        for (; j + V - 1 < j0 + jb; j += V) {
+            
+            // 1. Load C into a register ONCE
+            __m256d vc = _mm256_loadu_pd(&C[i*N + j]);
+
+            // 2. Loop over the inner dimension k
+            for (int k = k_start; k < k_end; ++k) {
+                
+                // 3. Broadcast one element of A
+                __m256d va = _mm256_set1_pd(A[i*N + k]);
+                
+                // 4. Load a contiguous vector from B (using row-major B)
+                __m256d vb = _mm256_loadu_pd(&B[k*N + j]); 
+                
+                // 5. Accumulate in the register (no load/store)
+                vc = _mm256_fmadd_pd(va, vb, vc);
             }
-            for (; j < j0 + jb; ++j) {
-                C[i*N + j] += a * B_T[j*N + k];
+            
+            // 6. Store the final result to C ONCE
+            _mm256_storeu_pd(&C[i*N + j], vc);
+        }
+
+        // Scalar cleanup loop for the remainder of j
+        for (; j < j0 + jb; ++j) {
+            // This loop is also more efficient (ijk order)
+            double c_scalar = C[i*N + j]; // Load C once
+            for (int k = k_start; k < k_end; ++k) {
+                c_scalar += A[i*N + k] * B[k*N + j]; // Accumulate
             }
+            C[i*N + j] = c_scalar; // Store C once
         }
     }
 }
@@ -163,22 +186,47 @@ static void gemm_blocked_avx2(const double* A, const double* B_T, double* C, int
 #if defined(__GNUC__) || defined(__clang__)
 __attribute__((target("avx512f")))
 #endif
-static void gemm_blocked_avx512_kernel(const double* A, const double* B_T, double* C, int N, int i_start, int i_end, int k_start, int k_end, int j0, int jb) {
+static void gemm_blocked_avx512_kernel(const double* A, const double* B, double* C, int N, int i_start, int i_end, int k_start, int k_end, int j0, int jb) {
+    
     const int V = 8; // 8 doubles in 512-bit
+
+    // Loop over rows of C
     for (int i = i_start; i < i_end; ++i) {
-        for (int k = k_start; k < k_end; ++k) {
-            double a = A[i*N + k];
-            __m512d va = _mm512_set1_pd(a);
-            int j = j0;
-            for (; j + V - 1 < j0 + jb; j += V) {
-                __m512d vc = _mm512_loadu_pd(&C[i*N + j]);
-                __m512d vb = _mm512_loadu_pd(&B_T[j*N + k]);
+        
+        int j = j0;
+        
+        // --- Vectorized j-loop (now outside the k-loop) ---
+        for (; j + V - 1 < j0 + jb; j += V) {
+            
+            // 1. Load C into a register ONCE before the k-loop
+            __m512d vc = _mm512_loadu_pd(&C[i*N + j]);
+
+            // 2. Loop over the inner dimension k to accumulate
+            for (int k = k_start; k < k_end; ++k) {
+                
+                // 3. Broadcast one element of A
+                __m512d va = _mm512_set1_pd(A[i*N + k]);
+                
+                // 4. Load a contiguous vector from B (using row-major B)
+                // This correctly gets B[k, j], B[k, j+1], ..., B[k, j+7]
+                __m512d vb = _mm512_loadu_pd(&B[k*N + j]); 
+                
+                // 5. Accumulate in the register (no memory access)
                 vc = _mm512_fmadd_pd(va, vb, vc);
-                _mm512_storeu_pd(&C[i*N + j], vc);
             }
-            for (; j < j0 + jb; ++j) {
-                C[i*N + j] += a * B_T[j*N + k];
+            
+            // 6. Store the final result to C ONCE after the k-loop
+            _mm512_storeu_pd(&C[i*N + j], vc);
+        }
+
+        // --- Scalar cleanup loop for the remainder of j ---
+        for (; j < j0 + jb; ++j) {
+            // Use the more efficient ijk loop order here as well
+            double c_scalar = C[i*N + j]; // Load C once
+            for (int k = k_start; k < k_end; ++k) {
+                c_scalar += A[i*N + k] * B[k*N + j]; // Accumulate
             }
+            C[i*N + j] = c_scalar; // Store C once
         }
     }
 }
@@ -220,17 +268,11 @@ static void gemm_driver(const double* A, const double* B, double* C, int N, int 
     MC = min(MC, N); KC = min(KC, N); NC = min(NC, N);
 
     const char* force = getenv("KERNEL");
-    bool used = false;
     if (force) {
         string f(force);
-        if (f=="avx512" && has_avx512f()) { gemm_blocked_avx512(A,B_T,C,N,MC,KC,NC); used = true; }
-        else if (f=="avx2" && has_avx2()) { gemm_blocked_avx2(A,B_T,C,N,MC,KC,NC); used = true; }
-        else if (f=="generic") { gemm_blocked_generic(A,B_T,C,N,MC,KC,NC); used = true; }
-    }
-    if (!used) {
-        if (has_avx512f()) gemm_blocked_avx512(A,B_T,C,N,MC,KC,NC);
-        else if (has_avx2()) gemm_blocked_avx2(A,B_T,C,N,MC,KC,NC);
-        else gemm_blocked_generic(A,B_T,C,N,MC,KC,NC);
+        if (f=="avx512" && has_avx512f()) { gemm_blocked_avx512(A,B_T,C,N,MC,KC,NC);}
+        else if (f=="avx2" && has_avx2()) { gemm_blocked_avx2(A,B_T,C,N,MC,KC,NC);}
+        else if (f=="generic") { gemm_blocked_generic(A,B_T,C,N,MC,KC,NC);}
     }
     aligned_free(B_T);
 }
